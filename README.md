@@ -1,8 +1,7 @@
 # DevToolbox
 
-An offline-first, terminal-styled toolbox with the utilities software engineers reach for
-every day. Almost **everything runs in the browser**; the REST client and the X.509 forge
-talk to the local Rust backend of this repository (as do JWTs signed or verified with PKCS#1 / SEC1 keys or certificates) and no other network call is made.
+A terminal-styled toolbox with the utilities software engineers reach for
+every day.
 
 ## Tools
 
