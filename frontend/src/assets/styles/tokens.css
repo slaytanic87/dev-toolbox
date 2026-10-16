@@ -1,0 +1,75 @@
+/**
+ * Design tokens for the DevToolbox "terminal / hacker" theme.
+ * Keep every colour, radius and spacing value here so that re-skinning
+ * the whole application stays a single-file change.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* --- surfaces --- */
+  --bg-root: #04070a;
+  --bg-canvas: #060b10;
+  --bg-panel: #0a1118;
+  --bg-panel-alt: #0d1620;
+  --bg-elevated: #111d28;
+  --bg-input: #060d13;
+  --bg-hover: #13212e;
+
+  /* --- lines --- */
+  --border: #16303d;
+  --border-soft: #102532;
+  --border-strong: #1d4a5c;
+
+  /* --- text --- */
+  --text: #cbe7df;
+  --text-strong: #e8fff7;
+  --text-muted: #6f8d93;
+  --text-dim: #4d6a70;
+
+  /* --- accents --- */
+  --accent: #00ff9c;
+  --accent-dim: #00c67a;
+  --accent-ghost: rgb(0 255 156 / 12%);
+  --accent-glow: rgb(0 255 156 / 35%);
+  --cyan: #19e3ff;
+  --cyan-ghost: rgb(25 227 255 / 12%);
+  --magenta: #ff3cad;
+  --violet: #a07cff;
+  --amber: #ffcf4a;
+  --danger: #ff5466;
+  --danger-ghost: rgb(255 84 102 / 12%);
+  --warn: #ffa23a;
+  --ok: var(--accent);
+
+  /* --- typography --- */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', ui-monospace, 'Menlo', 'Consolas',
+    monospace;
+  --font-ui: var(--font-mono);
+  --fs-xs: 0.69rem;
+  --fs-sm: 0.76rem;
+  --fs-md: 0.83rem;
+  --fs-lg: 0.95rem;
+  --fs-xl: 1.2rem;
+
+  /* --- geometry --- */
+  --radius-sm: 3px;
+  --radius: 5px;
+  --radius-lg: 8px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* --- layout --- */
+  --sidebar-w: 236px;
+  --topbar-h: 48px;
+  --statusbar-h: 26px;
+
+  /* --- effects --- */
+  --shadow-panel: 0 0 0 1px rgb(0 0 0 / 40%), 0 10px 30px -18px rgb(0 0 0 / 90%);
+  --shadow-pop: 0 18px 40px -20px rgb(0 0 0 / 95%);
+  --transition: 120ms ease;
+}
