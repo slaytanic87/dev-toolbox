@@ -7,7 +7,7 @@ const HIGHLIGHTS: Array<{ icon: IconName; title: string; text: string }> = [
   {
     icon: 'lock',
     title: '100% your tool',
-    text: 'No backend, no telemetry. Secrets never leave the tab.',
+    text: 'Dedicated backend, no telemetry. Secrets never leave the tab.',
   },
   {
     icon: 'zap',
