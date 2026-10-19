@@ -109,7 +109,7 @@ function buildQueryString(): string | null {
   if (request.value.auth.mode === 'apiKey' && request.value.auth.apiKeyIn === 'query' && request.value.auth.apiKeyName) {
     request.value.params.push({ id: crypto.randomUUID(), enabled: true, key: request.value.auth.apiKeyName, value: request.value.auth.apiKeyValue })
   }
-  return request.value.params.length > 0
+  return request.value.params.length > 1
     ? request.value.params.map((item) => `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`).join('&')
     : null
 }
@@ -133,7 +133,6 @@ async function send(): Promise<void> {
   controller = new AbortController()
 
   let queryString = buildQueryString()
-
   const restRequest: RestRequest = {
     method: request.value.method,
     path: request.value.url + (queryString ? `?${queryString}` : ''),
