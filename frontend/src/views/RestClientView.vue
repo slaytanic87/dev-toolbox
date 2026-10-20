@@ -105,10 +105,18 @@ function buildHeaders(): Array<[string, string]> {
   return headers
 }
 
-function buildQueryString(): string | null {
+function buildQueryString(url: URL): string | null {
+  let params = new URLSearchParams(url.search)
+  if (params.size > 0) {
+    params.forEach((value, key) => {
+      request.value.params.push({ id: crypto.randomUUID(), enabled: true, key, value })
+    })
+  }
+
   if (request.value.auth.mode === 'apiKey' && request.value.auth.apiKeyIn === 'query' && request.value.auth.apiKeyName) {
     request.value.params.push({ id: crypto.randomUUID(), enabled: true, key: request.value.auth.apiKeyName, value: request.value.auth.apiKeyValue })
   }
+
   return request.value.params.length > 1
     ? request.value.params.map((item) => `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`).join('&')
     : null
@@ -132,13 +140,15 @@ async function send(): Promise<void> {
   response.value = null
   controller = new AbortController()
 
-  let queryString = buildQueryString()
+  let url = new URL(request.value.url)
+  let queryString = buildQueryString(url)
   const restRequest: RestRequest = {
     method: request.value.method,
-    path: request.value.url + (queryString ? `?${queryString}` : ''),
+    path: url.origin + url.pathname + (queryString ? `?${queryString}` : ''),
     headers: buildHeaders(),
     body: buildBody(),
   }
+  console.log(restRequest)
   let request_backend = JSON.parse(JSON.stringify(request.value)) as HttpRequestConfig
   try {
     request_backend.body = JSON.stringify(restRequest)
@@ -148,19 +158,11 @@ async function send(): Promise<void> {
 
     const result = await sendHttpRequest(request_backend, controller.signal)
     let response_body = JSON.parse(result.body) as RestResponse
-    response.value = {} as HttpResponseResult
+    response.value = result
     response.value.body = response_body.body as string
     response.value.status = response_body.status
-    response.value.ok = result.ok
-    response.value.redirected = result.redirected
-    response.value.finalUrl = result.finalUrl
-    response.value.durationMs = result.durationMs
-    response.value.blobUrl = result.blobUrl
-    response.value.isBinary = result.isBinary
-    response.value.contentType = result.contentType
     response.value.headers = response_body.headers as Array<[string, string]>
-    response.value.isBinary = result.isBinary
-    response.value.size = result.size
+
     responseTab.value = 'body'
     pushHistory(result.status)
   } catch (error) {
