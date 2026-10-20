@@ -117,8 +117,8 @@ function buildQueryString(url: URL): string | null {
     request.value.params.push({ id: crypto.randomUUID(), enabled: true, key: request.value.auth.apiKeyName, value: request.value.auth.apiKeyValue })
   }
 
-  return request.value.params.length > 1
-    ? request.value.params.map((item) => `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`).join('&')
+  return request.value.params.length > 0
+    ? request.value.params.filter(item => item.key.length > 0).map((item) => `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`).join('&')
     : null
 }
 
