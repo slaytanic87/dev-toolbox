@@ -148,7 +148,6 @@ async function send(): Promise<void> {
     headers: buildHeaders(),
     body: buildBody(),
   }
-  console.log(restRequest)
   let request_backend = JSON.parse(JSON.stringify(request.value)) as HttpRequestConfig
   try {
     request_backend.body = JSON.stringify(restRequest)
