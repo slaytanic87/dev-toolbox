@@ -118,7 +118,7 @@ function buildQueryString(url: URL): string | null {
   }
 
   return request.value.params.length > 0
-    ? request.value.params.filter(item => item.key.length > 0).map((item) => `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`).join('&')
+    ? request.value.params.filter(item => item.key.length > 0 && item.value.length > 0).map((item) => `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`).join('&')
     : null
 }
 

@@ -1,5 +1,7 @@
 # DevToolbox
 
+![DevToolbox](devtoolbox.png)
+
 A terminal-styled toolbox with the utilities software engineers reach for
 every day.
 
@@ -25,8 +27,8 @@ Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>K</kbd> anywhere to open the quick s
 ### Frontend
 
 ```bash
-npm install
-npm run dev        # http://localhost:5173
+pnpm install
+pnpm run dev        # http://localhost:5173
 ```
 
 `npm run dev` proxies `/api` and `/rest` to `http://localhost:8080`, so start the Rust backend
@@ -35,9 +37,9 @@ npm run dev        # http://localhost:5173
 Other scripts:
 
 ```bash
-npm run build      # type-check (vue-tsc) + production build into dist/
-npm run preview    # serve the production build
-npm run typecheck  # type-check only
+pnpm run build      # type-check (vue-tsc) + production build into dist/
+pnpm run preview    # serve the production build
+pnpm run typecheck  # type-check only
 ```
 
 The build output in `dist/` is a plain static bundle. It uses hash based routing, so it can be
@@ -156,6 +158,9 @@ lib/hex/
 
 ### Backend
 
+```bash
+cargo run
+```
 
 #### Tech stack
 
@@ -215,3 +220,19 @@ are not supported.
   the selected range and are therefore capped.
 - Secrets, tokens and files never leave the tab — they are only kept in memory and in
   `localStorage` on your own machine.
+
+### Build Binary
+
+Building Backend & Frontend as binary
+
+**target:** debug
+
+```bash
+make build-all-dev
+```
+
+**target:** release
+
+```bash
+make build-all-prod
+```
