@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aws-lc-rs = "1.18.1"
+aws-lc-rs = "1.18.2"
 axum = { version = "0.8.9", features = ["macros", "ws"] }
 base64 = "0.23.1"
 mime_guess = "2.0.5"
@@ -17,7 +17,7 @@ serde_json = "1.0.154"
 sha1 = "0.11.0"
 sha2 = "0.11.1"
 time = { version = "0.3.55", features = ["formatting", "parsing", "macros"] }
-tokio = { version = "1.53.2", features = ["full"] }
+tokio = { version = "1.54.1", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["fmt", "env-filter", "json"] }
 x509-parser = "0.18.1"

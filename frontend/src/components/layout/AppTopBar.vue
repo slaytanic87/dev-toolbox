@@ -23,7 +23,7 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigat
       <AppIcon :name="current?.icon ?? 'grid'" :size="15" />
       <h1>{{ current?.name ?? 'Overview' }}</h1>
       <span class="topbar__tagline">
-        {{ current?.tagline ?? 'Everything runs in your ownership.' }}
+        {{ current?.tagline ?? 'All tools.' }}
       </span>
     </div>
 

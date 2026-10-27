@@ -582,7 +582,10 @@ function formatCount(total: bigint | number): string {
 /* ---------- ranges table ---------- */
 
 .table-wrap {
-  overflow-x: auto;
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
 }
 
 .ranges {
@@ -592,8 +595,11 @@ function formatCount(total: bigint | number): string {
 }
 
 .ranges th {
+  position: sticky;
+  top: 0;
   padding: 3px 8px;
   border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
   color: var(--text-dim);
   font-size: var(--fs-xs);
   font-weight: 500;

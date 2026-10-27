@@ -18,7 +18,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
 <template>
   <footer class="statusbar">
     <span class="statusbar__item statusbar__item--ok">
-      <span class="dot" />offline-capable &middot; no data leaves this tool
+      <span class="dot" />offline-capable &middot; 𓂧𓅂𓆯𓏏𓅱𓅱𓃭𓃀𓅱𓇨
     </span>
     <span class="statusbar__spacer" />
     <span class="statusbar__item">vue 3 + codemirror 6</span>
