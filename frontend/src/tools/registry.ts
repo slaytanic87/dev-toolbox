@@ -161,6 +161,32 @@ export const TOOLS: ToolDefinition[] = [
     ],
     component: () => import('@/views/CertificateView.vue'),
   },
+  {
+    id: 'ip',
+    path: '/ip',
+    name: 'IP Calculator',
+    short: 'IP',
+    tagline: 'Subnet IPv4 & IPv6 networks and inspect the mask/wildcard bit math.',
+    icon: 'network',
+    keywords: [
+      'ip',
+      'ipv4',
+      'ipv6',
+      'subnet',
+      'subnetting',
+      'cidr',
+      'netmask',
+      'subnet mask',
+      'wildcard mask',
+      'network',
+      'broadcast',
+      'host range',
+      'vlsm',
+      'classful',
+      'prefix',
+    ],
+    component: () => import('@/views/IpCalculatorView.vue'),
+  },
 ]
 
 export const TOOL_BY_ID = new Map(TOOLS.map((tool) => [tool.id, tool]))

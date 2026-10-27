@@ -36,6 +36,8 @@ export const ICONS = {
   certificate:
     '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M7 8.5h10M7 12h5"/><circle cx="16.5" cy="16.5" r="3"/><path d="m14.8 18.8-.3 3.2 2-1.1 2 1.1-.3-3.2"/>',
   hex: '<path d="M4 4h16v16H4z"/><path d="M4 9h16M4 15h16M9.5 4v16"/><path d="M6 12h1.5M12 7h1.5M16 12h1.5M12 17h1.5"/>',
+  network:
+    '<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7 7.5 10.3 16M17 7.5 13.7 16M7.5 6h9"/>',
 } as const
 
 export type IconName = keyof typeof ICONS
