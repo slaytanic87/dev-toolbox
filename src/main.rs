@@ -40,8 +40,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/jwt/verify", post(crate::adapter::incoming::verify_jwt))
         .route("/{*path}", get(crate::adapter::incoming::serve_ui_assets));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
-    info!("Devtools is running on 0.0.0.0:8080");
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
+    info!("Devtools is running on 127.0.0.1:8080");
     axum::serve(listener, app).await?;
     Ok(())
 }
