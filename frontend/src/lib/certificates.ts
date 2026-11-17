@@ -162,6 +162,16 @@ export interface CertificateBundle {
   details: CertificateDetails
 }
 
+export type CertificateEncoding = 'pem' | 'der'
+
+export interface ConvertedCertificate {
+  source: CertificateEncoding
+  target: CertificateEncoding
+  certificate_pem: string
+  certificate_der: string
+  details: CertificateDetails
+}
+
 export interface CsrBundle {
   csr_pem: string
   csr_der: string
@@ -211,6 +221,10 @@ export const signCsr = (payload: SignCsrPayload) => post<CertificateBundle>('/cs
 
 export const inspectCertificate = (certificate: string) =>
   post<CertificateDetails>('/inspect', { certificate })
+
+/** Converts an uploaded certificate file (`.crt`/`.pem`/...) to the opposite encoding. */
+export const convertCertificate = (file: string) =>
+  post<ConvertedCertificate>('/convert', { file })
 
 /* ----------------------------------------------------------------- defaults */
 

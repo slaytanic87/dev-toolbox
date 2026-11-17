@@ -6,7 +6,7 @@ use tracing::{info, warn};
 
 use crate::certificate::{
     self, AlgorithmInfo, CertificateBundle, CertificateDetails, CertificateRequest, CertificateError,
-    CsrBundle, CsrRequest, InspectRequest, KeyMaterial, KeyRequest, SignCsrRequest,
+    ConvertRequest, ConvertedCertificate, CsrBundle, CsrRequest, InspectRequest, KeyMaterial, KeyRequest, SignCsrRequest,
 };
 
 #[derive(Serialize)]
@@ -75,4 +75,11 @@ pub async fn inspect_certificate(
     Json(request): Json<InspectRequest>,
 ) -> ApiResult<CertificateDetails> {
     Ok(Json(certificate::inspect_certificate(&request)?))
+}
+
+pub async fn convert_certificate(
+    Json(request): Json<ConvertRequest>,
+) -> ApiResult<ConvertedCertificate> {
+    info!("Converting an uploaded certificate between PEM and DER");
+    Ok(Json(certificate::convert_certificate(&request)?))
 }

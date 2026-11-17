@@ -36,6 +36,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/api/certificates/inspect",
             post(crate::adapter::incoming::inspect_certificate),
         )
+        .route(
+            "/api/certificates/convert",
+            post(crate::adapter::incoming::convert_certificate),
+        )
         .route("/api/jwt/sign", post(crate::adapter::incoming::sign_jwt))
         .route("/api/jwt/verify", post(crate::adapter::incoming::verify_jwt))
         .route("/{*path}", get(crate::adapter::incoming::serve_ui_assets));

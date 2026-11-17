@@ -16,6 +16,7 @@ import SplitPane from '@/components/layout/SplitPane.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import CopyButton from '@/components/ui/CopyButton.vue'
+import DropZone from '@/components/ui/DropZone.vue'
 import SegmentedControl from '@/components/ui/SegmentedControl.vue'
 import StatusNote from '@/components/ui/StatusNote.vue'
 import ToolPanel from '@/components/ui/ToolPanel.vue'
@@ -25,6 +26,7 @@ import {
   type IssuerSelection,
   type VaultItem,
 } from '@/composables/useCertificateVault'
+import { downloadBlob, downloadText } from '@/composables/useClipboard'
 import { usePersistentState } from '@/composables/usePersistentState'
 import { useToast } from '@/composables/useToast'
 import {
@@ -33,16 +35,19 @@ import {
   EXTENDED_KEY_USAGES,
   KEY_FORMATS,
   KEY_USAGES,
+  convertCertificate,
   createCertificate,
   createCsr,
   createDefaultSans,
   commonNameOf,
   createDefaultSubject,
+  derBlob,
   inspectCertificate,
   signCsr,
   slugify,
   type CertificateBundle,
   type CertificateDetails,
+  type ConvertedCertificate,
   type CsrBundle,
   type ExtendedKeyUsage,
   type KeyInput,
@@ -50,18 +55,20 @@ import {
   type SanInput,
   type SubjectInput,
 } from '@/lib/certificates'
+import { bytesToBase64 } from '@/lib/bytes'
 
 const toast = useToast()
 const vault = useCertificateVault()
 
 /* -------------------------------------------------------------------- modes */
 
-type Mode = 'certificate' | 'csr' | 'inspect'
+type Mode = 'certificate' | 'csr' | 'inspect' | 'convert'
 
 const MODES: Array<{ value: Mode; label: string; title: string }> = [
   { value: 'certificate', label: 'certificate', title: 'Issue a self-signed, CA or CA-signed certificate' },
   { value: 'csr', label: 'signing request', title: 'Create a CSR or sign one with a CA' },
   { value: 'inspect', label: 'inspect', title: 'Decode an existing certificate' },
+  { value: 'convert', label: 'convert', title: 'Convert a certificate file between .crt (DER) and .pem' },
 ]
 
 const mode = usePersistentState<Mode>('certificates:mode', 'certificate')
@@ -418,6 +425,43 @@ async function runInspect(): Promise<void> {
   }
 }
 
+/* ------------------------------------------------------------------ convert */
+
+const convertResult = ref<ConvertedCertificate | null>(null)
+const convertError = ref<string | null>(null)
+const convertName = ref('certificate')
+const convertSource = ref('')
+
+async function onConvertFiles(files: File[]): Promise<void> {
+  const file = files[0]
+  if (!file) return
+  convertError.value = null
+  convertResult.value = null
+  convertSource.value = file.name
+  convertName.value = slugify(file.name.replace(/\.[^.]*$/, ''), 'certificate')
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    convertResult.value = await convertCertificate(bytesToBase64(bytes))
+  } catch (cause) {
+    convertError.value = cause instanceof Error ? cause.message : String(cause)
+  }
+}
+
+/** `.crt` is the binary DER counterpart of `.pem` in this conversion. */
+const convertFileName = computed(
+  () => `${convertName.value}.${convertResult.value?.target === 'der' ? 'crt' : 'pem'}`,
+)
+
+function downloadConverted(): void {
+  const result = convertResult.value
+  if (!result) return
+  if (result.target === 'der') {
+    downloadBlob(convertFileName.value, derBlob(result.certificate_der))
+  } else {
+    downloadText(convertFileName.value, result.certificate_pem, 'application/x-pem-file')
+  }
+}
+
 function resetForm(): void {
   form.value = createCertificateForm()
   bundle.value = null
@@ -710,7 +754,7 @@ const outputFormats = computed(() => CERTIFICATE_FORMATS)
     </template>
 
     <!-- ----------------------------------------------------------- inspect -->
-    <template v-else>
+    <template v-else-if="mode === 'inspect'">
       <SplitPane sizing="content" storage-key="cert:inspect" :min-a="340" :min-b="340">
         <template #a>
           <ToolPanel icon="search" title="Certificate" subtitle="PEM or base64 DER">
@@ -740,9 +784,45 @@ const outputFormats = computed(() => CERTIFICATE_FORMATS)
       </SplitPane>
     </template>
 
+    <!-- ----------------------------------------------------------- convert -->
+    <template v-else>
+      <ToolPanel
+        icon="upload"
+        title="Convert certificate"
+        subtitle=".crt (binary DER) &harr; .pem (base64 text)"
+      >
+        <DropZone
+          accept=".crt,.cer,.cert,.der,.pem,application/x-x509-ca-cert,application/x-pem-file,application/octet-stream"
+          icon="upload"
+          @files="onConvertFiles"
+        >
+          <template #title>Drop a certificate file or click to browse</template>
+          <template #hint>
+            .crt, .cer, .der &rarr; .pem &middot; .pem &rarr; .crt &middot; the encoding is detected from the content
+          </template>
+        </DropZone>
+        <StatusNote v-if="convertError" tone="error">{{ convertError }}</StatusNote>
+      </ToolPanel>
+
+      <ToolPanel v-if="convertResult" icon="certificate" title="Converted certificate" :subtitle="convertSource">
+        <template #actions>
+          <CopyButton :value="convertResult.certificate_pem" label="copy PEM" />
+          <AppButton size="sm" icon="download" @click="downloadConverted">
+            {{ convertFileName }}
+          </AppButton>
+        </template>
+        <StatusNote tone="ok">
+          Detected {{ convertResult.source === 'der' ? 'binary DER' : 'PEM' }} input, converted to
+          {{ convertResult.target === 'der' ? 'binary DER (.crt)' : 'PEM (.pem)' }}.
+        </StatusNote>
+        <CodeEditor :model-value="convertResult.certificate_pem" readonly language="text" min-height="220px" />
+        <CertificateDetailsCard :details="convertResult.details" />
+      </ToolPanel>
+    </template>
+
     <!-- ------------------------------------------------------------ output -->
     <ToolPanel
-      v-if="bundle && mode !== 'inspect'"
+      v-if="bundle && (mode === 'certificate' || mode === 'csr')"
       icon="terminal"
       title="Result"
       :subtitle="bundle.details.subject"

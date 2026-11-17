@@ -298,6 +298,12 @@ pub struct InspectRequest {
     pub certificate: String,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConvertRequest {
+    /// Base64 encoded raw bytes of the uploaded certificate file.
+    pub file: String,
+}
+
 /* ------------------------------------------------------------------- output */
 
 #[derive(Debug, Clone, Serialize)]
@@ -310,6 +316,25 @@ pub struct KeyMaterial {
     pub public_key_pem: String,
     /// Base64 encoded SubjectPublicKeyInfo DER.
     pub public_key_der: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CertificateEncoding {
+    Pem,
+    Der,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ConvertedCertificate {
+    /// Encoding detected in the uploaded file.
+    pub source: CertificateEncoding,
+    /// Encoding of the converted output (always the opposite of `source`).
+    pub target: CertificateEncoding,
+    pub certificate_pem: String,
+    /// Base64 encoded binary DER.
+    pub certificate_der: String,
+    pub details: CertificateDetails,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -761,11 +786,11 @@ pub fn create_csr(request: &CsrRequest) -> Result<CsrBundle> {
 }
 
 pub fn sign_csr(request: &SignCsrRequest) -> Result<CertificateBundle> {
-    let csr_pem = request.csr_pem.trim();
-    let mut csr = if csr_pem.contains("-----BEGIN") {
+    let csr_pem: &str = request.csr_pem.trim();
+    let mut csr: CertificateSigningRequestParams = if csr_pem.contains("-----BEGIN") {
         CertificateSigningRequestParams::from_pem(csr_pem)
     } else {
-        let der = decode_der(csr_pem)?;
+        let der: Vec<u8> = decode_der(csr_pem)?;
         CertificateSigningRequestParams::from_der(&der.into())
     }
     .map_err(|error| CertificateError::new(format!("The CSR could not be parsed: {error}")))?;
@@ -817,8 +842,56 @@ pub fn sign_csr(request: &SignCsrRequest) -> Result<CertificateBundle> {
 }
 
 pub fn inspect_certificate(request: &InspectRequest) -> Result<CertificateDetails> {
-    let der = certificate_der(&request.certificate)?;
+    let der: Vec<u8> = certificate_der(&request.certificate)?;
     inspect_der(&der)
+}
+
+/// Converts an uploaded certificate file between PEM (text) and DER (binary).
+/// The input encoding is detected from the content, not from the file name.
+pub fn convert_certificate(request: &ConvertRequest) -> Result<ConvertedCertificate> {
+    let bytes: Vec<u8> = decode_der(&request.file)
+        .map_err(|_| CertificateError::new("The uploaded file could not be read."))?;
+    if bytes.is_empty() {
+        return Err(CertificateError::new("The uploaded file is empty."));
+    }
+
+    let text: Option<&str> = std::str::from_utf8(&bytes).ok().map(str::trim);
+    let (source, der) = match text {
+        Some(text) if text.contains("-----BEGIN") => {
+            let blocks = pem::parse_many(text)
+                .map_err(|error| CertificateError::new(format!("Invalid PEM: {error}")))?;
+            let mut certificates = blocks
+                .iter()
+                .filter(|block| matches!(block.tag(), "CERTIFICATE" | "TRUSTED CERTIFICATE"));
+            let first = certificates.next().ok_or_else(|| {
+                CertificateError::new("The PEM file does not contain a certificate.")
+            })?;
+            if certificates.next().is_some() {
+                return Err(CertificateError::new(
+                    "The PEM file contains several certificates, but DER can only hold one.",
+                ));
+            }
+            (CertificateEncoding::Pem, first.contents().to_vec())
+        }
+        // Tolerate DER that was base64 encoded without PEM armour.
+        Some(text) if X509Certificate::from_der(&bytes).is_err() => {
+            (CertificateEncoding::Pem, decode_der(text)?)
+        }
+        _ => (CertificateEncoding::Der, bytes),
+    };
+
+    let details = inspect_der(&der)?;
+    let target = match source {
+        CertificateEncoding::Pem => CertificateEncoding::Der,
+        CertificateEncoding::Der => CertificateEncoding::Pem,
+    };
+    Ok(ConvertedCertificate {
+        source,
+        target,
+        certificate_pem: der_to_pem("CERTIFICATE", &der),
+        certificate_der: BASE64.encode(&der),
+        details,
+    })
 }
 
 /* ------------------------------------------------------------- introspection */
@@ -1208,5 +1281,39 @@ mod tests {
                 serde_json::Value::String(info.id)
             );
         }
+    }
+
+    #[test]
+    fn converts_between_pem_and_der_in_both_directions() {
+        let bundle = create_certificate(&CertificateRequest {
+            subject: subject("convert.test"),
+            ..Default::default()
+        })
+        .expect("certificate");
+
+        let from_pem = convert_certificate(&ConvertRequest {
+            file: BASE64.encode(bundle.certificate_pem.as_bytes()),
+        })
+        .expect("pem to der");
+        assert_eq!(from_pem.source, CertificateEncoding::Pem);
+        assert_eq!(from_pem.target, CertificateEncoding::Der);
+        assert_eq!(from_pem.certificate_der, bundle.certificate_der);
+
+        let from_der = convert_certificate(&ConvertRequest {
+            file: bundle.certificate_der.clone(),
+        })
+        .expect("der to pem");
+        assert_eq!(from_der.source, CertificateEncoding::Der);
+        assert_eq!(from_der.target, CertificateEncoding::Pem);
+        assert_eq!(from_der.certificate_pem.trim(), bundle.certificate_pem.trim());
+    }
+
+    #[test]
+    fn rejects_files_that_are_not_certificates() {
+        let error = convert_certificate(&ConvertRequest {
+            file: BASE64.encode(b"hello world"),
+        })
+        .unwrap_err();
+        assert!(!error.message().is_empty());
     }
 }
